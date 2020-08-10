@@ -23,7 +23,9 @@ class App extends React.Component {
   constructor() {
     super();
     this.state = {
-      calendars: []
+      calendars: [],      // list of all visable calenders by id
+      thisWeekEvents: [], // list of all events
+      week: 0
     };
 
     this.handleClientLoad = this.handleClientLoad.bind(this);
@@ -32,8 +34,10 @@ class App extends React.Component {
     this.handleAuthClick = this.handleAuthClick.bind(this);
     this.handleSignoutClick = this.handleSignoutClick.bind(this);
     this.appendPre = this.appendPre.bind(this);
-    this.listUpcomingEvents = this.listUpcomingEvents.bind(this);
+    this.listUpcomingEvents = this.listEvents.bind(this);
     this.listCalenders = this.listCalenders.bind(this);
+    this.getLastSunday = this.getLastSunday.bind(this);
+    this.getNextSunday =this.getNextSunday.bind(this);
   }
 
   componentDidMount() {
@@ -78,7 +82,6 @@ class App extends React.Component {
     if (isSignedIn) {
       authorizeButton.style.display = 'none';
       signoutButton.style.display = 'block';
-      this.listUpcomingEvents();
       this.listCalenders();
     } else {
       authorizeButton.style.display = 'block';
@@ -112,58 +115,106 @@ class App extends React.Component {
     pre.appendChild(textContent);
   }
 
+  getLastSunday(maxItr) {
+    let t = new Date();
+
+    t.setDate((t.getDate() - (7*maxItr) ) - t.getDay());
+    t.setHours(0,0,0,0)
+
+    return t;
+  }
+
+  getNextSunday(maxItr) {
+    let t = new Date();
+
+    t.setDate((t.getDate() - (7*maxItr) ) + (6-t.getDay()));
+    t.setHours(23,59,59,999)
+    
+    return t;
+  }
+
   /**
    * Print the summary and start datetime/date of the next ten events in
    * the authorized user's calendar. If no events are found an
    * appropriate message is printed.
    */
-  listUpcomingEvents() {
-    gapi.client.calendar.events.list({
-      'calendarId': 'primary',
-      'timeMin': (new Date()).toISOString(),
-      'showDeleted': false,
-      'singleEvents': true,
-      'maxResults': 10,
-      'orderBy': 'startTime'
-    }).then((response) => {
-      var events = response.result.items;
-      this.appendPre('Upcoming events:');
+  listEvents() {
+    let weekEventsTemp = [];
 
-      if (events.length > 0) {
-        for (let i = 0; i < events.length; i++) {
-          var event = events[i];
-          var when = event.start.dateTime;
-          if (!when) {
-            when = event.start.date;
-          }
-          this.appendPre(event.summary + ' (' + when + ')')
-        }
-      } else {
-        this.appendPre('No upcoming events found.');
-      }
+    this.state.calendars.forEach(cal => {
+      console.log(cal.summary);
+      gapi.client.calendar.events.list({
+        'calendarId': `${cal.id}`,
+        'timeMin': (this.getLastSunday(0)).toISOString(),
+        'timeMax': (this.getNextSunday(0)).toISOString(),
+        'showDeleted': false,
+        'singleEvents': true,
+        'orderBy': 'startTime'
+      }).then((response) => {
+        let events = response.result.items;
+        
+        // weekEventsTemp.push({
+        //   id: cal.id,
+        //   name: cal.summary,
+        //   events: events
+        // });
+        let temp = {
+          id: cal.id,
+          name: cal.summary,
+          events: events
+        };
+        this.setState({thisWeekEvents: this.state.thisWeekEvents.concat(temp)})
+        // this.appendPre(`\n${cal.summary} events:`);
+        // if (events.length > 0) {
+        //   for (let i = 0; i < events.length; i++) {
+        //     var event = events[i];
+        //     var when = event.start.dateTime;
+        //     if (!when) {
+        //       when = event.start.date;
+        //     }
+        //     this.appendPre(event.summary + ' (' + when + ')')
+        //   }
+        // } else {
+        //   this.appendPre('No upcoming events found.');
+        // }
+
+      });
+      
     });
   }
 
-    /**
-   * Print the summary and start datetime/date of the next ten events in
-   * the authorized user's calendar. If no events are found an
-   * appropriate message is printed.
+  /*
+   * Fetches all visible calenders of signed in user.
+   * Pre: User must be logged in
+   * Pos: calendars state updated with list of calendars, listEvents() called
    */
   listCalenders() {
     gapi.client.calendar.calendarList.list({
       'showDeleted': false,
       'maxResults': 10,
     }).then((resp) => {
-      // console.log(resp.result.items);
-      this.setState({calendars: resp.result.items});
+      console.log(resp.result.items);
+      this.setState({
+        calendars: resp.result.items
+      }, this.listEvents);
     });
   }
 
   render() {
+    console.log(this.state.thisWeekEvents);
     return (
       <div className="App">
-        {this.state.calendars.map((c, i) => (
-          <ul key={i}>{c.summary}</ul>
+        {this.state.thisWeekEvents.map((c, i) => (
+          <div key={i}>
+            {c.name}
+            <div>
+              {
+                c.events.map((e,i) => (
+                  <div>{e.summary} {e.start.dateTime}</div>
+                ))
+              }
+            </div>
+          </div>
         ))}
       </div>
     );
