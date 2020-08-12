@@ -3,6 +3,7 @@ import React, {useEffect, useState} from 'react';
 import logo from './logo.svg';
 import KEYS from './apiGoogleconfig.json'
 import './App.css';
+import DoughnutChart from './components/DoughnutChart';
 
   // Client ID and API key from the Developer Console
   var CLIENT_ID = KEYS.clientId;
@@ -23,7 +24,7 @@ class App extends React.Component {
   constructor() {
     super();
     this.state = {
-      calendars: [],      // list of all visable calenders by id
+      calendars: [],      // list of all visible calenders by id
       thisWeekEvents: [], // list of all events
       week: 0
     };
@@ -216,6 +217,7 @@ class App extends React.Component {
             </div>
           </div>
         ))}
+        <DoughnutChart />
       </div>
     );
   }
