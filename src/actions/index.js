@@ -1,6 +1,13 @@
-export const login = () => {
+export const login = (ft) => {
     return {
-        type: 'LOGIN'
+        type: 'LOGIN',
+        firstTime: ft
+    }
+}
+
+export const logout = () => {
+    return {
+        type: 'LOGOUT'
     }
 }
 

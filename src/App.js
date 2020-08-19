@@ -4,7 +4,7 @@ import KEYS from './apiGoogleconfig.json'
 import './App.css';
 import DoughnutChart from './components/DoughnutChart';
 import {useSelector, useDispatch} from 'react-redux';
-import {login} from './actions';
+import {login, logout} from './actions';
 
   // Client ID and API key from the Developer Console
   var CLIENT_ID = KEYS.clientId;
@@ -229,46 +229,17 @@ import {login} from './actions';
 // }
 
 function App() {
+  let firstTime = true;
   const counter = useSelector(state => state.counter);
   const isLogged = useSelector(state => state.isLogged);
   const dispatch = useDispatch();
-  
-  const signInButtonRef = useRef();
-  const signOutButtonRef = useRef();
 
   useEffect(() => {
-    handleClientLoad();
+    // console.log('aksdjfioow');
+    dispatch(login(firstTime));
+    firstTime=false;
   });
 
-  /**
- *  On load, called to load the auth2 library and API client library.
- */
-function handleClientLoad() {
-  gapi.load('client:auth2', initClient);
-}
-
-/**
- *  Initializes the API client library and sets up sign-in state
- *  listeners.
- */
-function initClient() {
-  gapi.client.init({
-    apiKey: API_KEY,
-    clientId: CLIENT_ID,
-    discoveryDocs: DISCOVERY_DOCS,
-    scope: SCOPES
-  }).then(() => {
-    // Listen for sign-in state changes.
-    gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
-
-    // Handle the initial sign-in state.
-    updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-    authorizeButton.onclick = handleAuthClick;
-    signoutButton.onclick = handleSignoutClick;
-  }, (error) => {
-    this.appendPre(JSON.stringify(error, null, 2));
-  });
-}
 
 /*
 ** Fetches all visible calenders of signed in user.
@@ -287,39 +258,17 @@ function listCalenders() {
   });
 }
 
-/**
- *  Sign in the user upon button click.
- */
-function handleAuthClick(event) {
-  gapi.auth2.getAuthInstance().signIn();
-}
-
-/**
- *  Sign out the user upon button click.
- */
-function handleSignoutClick(event) {
-  gapi.auth2.getAuthInstance().signOut();
-}
-/*
- *  Called when the signed in status changes, to update the UI
- *  appropriately. After a sign-in, the API is called.
- */
-function updateSigninStatus(isSignedIn) {
-  if (isSignedIn) {
-    this.signInButtonRef.style.display = 'none';
-    signOutButtonRef.style.display = 'block';
-  } else {
-    console.log(signInButtonRef);
-    signInButtonRef.style.display = 'block';
-    signOutButtonRef.style.display = 'none';
-  }
-}
-
   return(
       <div>
           <h1>hello {counter}</h1>
-          <button ref={signInButtonRef} onClick={() => dispatch(login())}>sign in</button>
-          <button ref={signOutButtonRef} onClick={() => dispatch(login())}>sign Out</button>
+          {
+            isLogged? (
+              <button onClick={() => dispatch(logout())}>Sign Out</button>
+            ):
+            (
+              <button onClick={() => dispatch(login())}>Sign In</button>
+            )
+          }
           {isLogged ? <h3>secret key...</h3> : ''} 
       </div>
   )
