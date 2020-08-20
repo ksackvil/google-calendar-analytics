@@ -1,5 +1,6 @@
 import Chart from 'chart.js';
 import React, {useEffect, useState} from 'react';
+import {useSelector, useDispatch} from 'react-redux';
 
 class DoughnutChart extends React.Component {
   constructor(props) {
@@ -27,7 +28,9 @@ class DoughnutChart extends React.Component {
 
   render() {
     return (
-      <canvas ref={this.chartRef} />
+      <div>
+        <canvas ref={this.chartRef} />
+      </div>
     );
   }
 }

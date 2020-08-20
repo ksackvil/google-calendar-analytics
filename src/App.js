@@ -4,21 +4,8 @@ import KEYS from './apiGoogleconfig.json'
 import './App.css';
 import DoughnutChart from './components/DoughnutChart';
 import {useSelector, useDispatch} from 'react-redux';
-import {login, logout} from './actions';
-
-  // Client ID and API key from the Developer Console
-  var CLIENT_ID = KEYS.clientId;
-  var API_KEY = KEYS.apiKey;
-
-  // Array of API discovery doc URLs for APIs used by the quickstart
-  var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"];
-
-  // Authorization scopes required by the API; multiple scopes can be
-  // included, separated by spaces.
-  var SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
-
-  var authorizeButton = document.getElementById('authorize_button');
-  var signoutButton = document.getElementById('signout_button');
+import {login, logout, first_login} from './actions';
+import Charts from './components/Charts';
 
 // class App extends React.Component {
 
@@ -229,38 +216,17 @@ import {login, logout} from './actions';
 // }
 
 function App() {
-  let firstTime = true;
   const counter = useSelector(state => state.counter);
   const isLogged = useSelector(state => state.isLogged);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // console.log('aksdjfioow');
-    dispatch(login(firstTime));
-    firstTime=false;
-  });
-
-
-/*
-** Fetches all visible calenders of signed in user.
-** Pre: User must be logged in
-** Pos: calendars state updated with list of calendars, listEvents() called
-*/
-function listCalenders() {
-  gapi.client.calendar.calendarList.list({
-    'showDeleted': false,
-    'maxResults': 10,
-  }).then((resp) => {
-    console.log(resp.result.items);
-    // this.setState({
-    //   calendars: resp.result.items
-    // }, this.listEvents);
-  });
-}
+    dispatch(first_login());
+  }, []);
 
   return(
       <div>
-          <h1>hello {counter}</h1>
+          <h1>Calendar Stats</h1>
           {
             isLogged? (
               <button onClick={() => dispatch(logout())}>Sign Out</button>
@@ -269,10 +235,14 @@ function listCalenders() {
               <button onClick={() => dispatch(login())}>Sign In</button>
             )
           }
-          {isLogged ? <h3>secret key...</h3> : ''} 
+          {
+            isLogged? (
+              <Charts />
+            ): 
+            ('login to see charts')
+          }
       </div>
   )
 };
-
 
 export default App;

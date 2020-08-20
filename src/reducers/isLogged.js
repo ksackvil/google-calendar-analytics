@@ -1,5 +1,6 @@
 /* global gapi */
 import KEYS from '../apiGoogleconfig.json'
+
 // Client ID and API key from the Developer Console
 var CLIENT_ID = KEYS.clientId;
 var API_KEY = KEYS.apiKey;
@@ -10,12 +11,13 @@ var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/
 // Authorization scopes required by the API; multiple scopes can be
 // included, separated by spaces.
 var SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
+
 /*
  *  On load, called to load the auth2 library and API client library.
  */
 function handleClientLoad() {
     gapi.load('client:auth2', initClient);
-  }
+}
   
 /*
  *  Initializes the API client library and sets up sign-in state
@@ -28,22 +30,13 @@ function initClient() {
         discoveryDocs: DISCOVERY_DOCS,
         scope: SCOPES
     }).then(() => {
-        // // Listen for sign-in state changes.
-        // gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
-
-        // // Handle the initial sign-in state.
-        // updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-        // authorizeButton.onclick = handleAuthClick;
-        // signoutButton.onclick = handleSignoutClick;
-        if(!isLoggedIn()) {
-            handleLogin();
-        }
+        handleLogin();
     }, (error) => {
         this.appendPre(JSON.stringify(error, null, 2));
     });
 }
 
-const isLoggedIn = () => {
+function isLoggedIn() {
     return (gapi.auth2.getAuthInstance().isSignedIn.get());
 }
 
@@ -58,16 +51,17 @@ function handleLogin() {
  *  Sign out the user upon button click.
  */
 function handleLogout() {
+    console.log('logging out');
     gapi.auth2.getAuthInstance().signOut();
 }
   
 const loggedReducer = (state = false, action) => {
     switch(action.type) {
+        case 'FIRST_LOGIN':
+            handleClientLoad();
+            return true;
         case 'LOGIN':
-            if (!isLoggedIn && action.firstTime) {
-                handleClientLoad();
-            }
-            else if(!isLoggedIn) {
+            if(!isLoggedIn()) {
                 handleLogin();
             }
             else {
@@ -76,7 +70,7 @@ const loggedReducer = (state = false, action) => {
 
             return true;
         case 'LOGOUT':
-            if(isLoggedIn) {
+            if(isLoggedIn()) {
                 handleLogout();
             }
             else {

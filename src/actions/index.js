@@ -1,7 +1,19 @@
-export const login = (ft) => {
+export const fetch_cals = () => {
     return {
-        type: 'LOGIN',
-        firstTime: ft
+        type: 'FETCH_CALS'
+    }
+}
+
+
+export const first_login = () => {
+    return {
+        type: 'FIRST_LOGIN',
+    }
+}
+
+export const login = () => {
+    return {
+        type: 'LOGIN'
     }
 }
 
