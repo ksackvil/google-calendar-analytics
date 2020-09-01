@@ -4,8 +4,9 @@ import KEYS from './apiGoogleconfig.json'
 import './App.css';
 import DoughnutChart from './components/DoughnutChart';
 import {useSelector, useDispatch} from 'react-redux';
-import {login, logout, first_login} from './actions';
+import { set_cals, append_events, get_prev_week, get_next_week } from './actions';
 import Charts from './components/Charts';
+import calenderReducer from './reducers/events';
 
 // class App extends React.Component {
 
@@ -215,33 +216,107 @@ import Charts from './components/Charts';
 //   }
 // }
 
+// Client ID and API key from the Developer Console
+const CLIENT_ID = KEYS.clientId;
+const API_KEY = KEYS.apiKey;
+
+// Array of API discovery doc URLs for APIs used by the quickstart
+const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"];
+
+// Authorization scopes required by the API; multiple scopes can be
+// included, separated by spaces.
+const SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
+
 function App() {
-  const counter = useSelector(state => state.counter);
-  const isLogged = useSelector(state => state.isLogged);
   const dispatch = useDispatch();
+  const weekCount = useSelector(state => state.weekCount);
+  const calendars = useSelector(state => state.calendars);
+  const events = useSelector(state => state.events);
 
   useEffect(() => {
-    dispatch(first_login());
+    gapi.load('client:auth2', initClient);
   }, []);
 
+  const initClient = () => {
+    gapi.client.init({
+      apiKey: API_KEY,
+      clientId: CLIENT_ID,
+      discoveryDocs: DISCOVERY_DOCS,
+      scope: SCOPES
+    }).then(() => {
+      getCalendars();
+    });
+  };
+
+  const getCalendars = () => {
+    gapi.client.calendar.calendarList.list({
+      'showDeleted': false,
+      'maxResults': 10,
+    }).then((resp) => {
+      dispatch(set_cals(resp.result.items))
+      getEvents(resp.result.items);
+    });
+  };
+
+  const getEvents = (cals) => {
+    cals.forEach(cal => {
+      gapi.client.calendar.events.list({
+        'calendarId': `${cal.id}`,
+        'timeMin': (getLastSunday(weekCount)).toISOString(),
+        'timeMax': (getNextSunday(weekCount)).toISOString(),
+        'showDeleted': false,
+        'singleEvents': true,
+        'orderBy': 'startTime'
+      }).then((response) => {
+        dispatch(append_events({
+          id: cal.id,
+          name: cal.summary,
+          events: response.result.items
+        }));
+      });
+    });
+  };
+
+  const getLastSunday = (maxItr) => {
+    let t = new Date();
+
+    t.setDate((t.getDate() - (7*maxItr) ) - t.getDay());
+    t.setHours(0,0,0,0)
+    return t;
+  };
+
+  const getNextSunday = (maxItr) => {
+    let t = new Date();
+
+    t.setDate((t.getDate() - (7*maxItr) ) + (6-t.getDay()));
+    t.setHours(23,59,59,999)
+    return t;
+  };
+
+  const changeWeek = (type) => {
+    if(type === 'prev') {
+      dispatch(get_prev_week());
+    }
+    else if (type === 'next') {
+      dispatch(get_next_week());
+    }
+    getEvents(calendars);
+  }
+
   return(
-      <div>
-          <h1>Calendar Stats</h1>
-          {
-            isLogged? (
-              <button onClick={() => dispatch(logout())}>Sign Out</button>
-            ):
-            (
-              <button onClick={() => dispatch(login())}>Sign In</button>
+    <div>
+        <button onClick={() => changeWeek('prev')}>-</button>
+        <button onClick={() => changeWeek('next')}>+</button>
+        {
+          events.map((event, i) => {
+            return(
+              event.events.map((eve, index) => {
+                return(<div>{eve.summary}</div>)
+              })
             )
-          }
-          {
-            isLogged? (
-              <Charts />
-            ): 
-            ('login to see charts')
-          }
-      </div>
+          })
+        }
+    </div>
   )
 };
 

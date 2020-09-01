@@ -1,31 +1,25 @@
-export const fetch_cals = () => {
+export const set_cals = (data) => {
     return {
-        type: 'FETCH_CALS'
+        type: 'SET_CALS',
+        payload: data
     }
-}
+};
 
-
-export const first_login = () => {
+export const append_events = (data) => {
     return {
-        type: 'FIRST_LOGIN',
+        type: 'APPEND_EVENTS',
+        payload: data
     }
-}
+};
 
-export const login = () => {
+export const get_prev_week = () => {
     return {
-        type: 'LOGIN'
+        type: 'GET_PREV_WEEK'
     }
-}
+};
 
-export const logout = () => {
+export const get_next_week = () => {
     return {
-        type: 'LOGOUT'
+        type: 'GET_NEXT_WEEK'
     }
-}
-
-export const decrement = () => {
-    return {
-        type: 'DECREMENT'
-    }
-}
-
+};

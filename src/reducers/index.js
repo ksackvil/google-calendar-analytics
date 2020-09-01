@@ -1,8 +1,13 @@
-import loggedReducer from './isLogged';
+import eventsReducer from './events';
+import calendarsReducer from './calendars';
+import weekCountReducer from './weekCount';
+
 import {combineReducers} from 'redux';
 
 const rootReducer = combineReducers({
-    isLogged: loggedReducer
+    events: eventsReducer,
+    weekCount: weekCountReducer,
+    calendars: calendarsReducer
 });
 
 export default rootReducer;
